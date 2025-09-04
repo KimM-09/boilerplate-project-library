@@ -69,11 +69,36 @@ module.exports = function (app) {
     .post(async function(req, res){
       let bookid = req.params.id;
       let comment = req.body.comment;
+      if(!comment) {
+        return res.send('missing required field comment');
+      }
+      try {
+        let book = await Book.findById(bookid).exec();
+        if(!book) {
+          return res.send('no book exists');
+        }
+        book.comments.push(comment);
+        book.commentcount = book.comments.length;
+        await book.save();
+        return res.json({_id: book._id, title: book.title, comments: book.comments});
+      } catch(err) {
+        return res.send('no book exists');
+      }
       //json res format same as .get
     })
     
     .delete(async function(req, res){
       let bookid = req.params.id;
+      try {
+        let book = await Book.findById(bookid).exec();
+        if(!book) {
+          return res.send('no book exists');
+        }
+        await Book.findByIdAndDelete(bookid).exec();
+        return res.send('delete successful');
+      } catch(err) {
+        return res.send('no book exists');
+      }
       //if successful response will be 'delete successful'
     });
   
